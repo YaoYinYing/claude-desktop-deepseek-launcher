@@ -38,7 +38,7 @@ DEFAULT_BASE_URL = "https://api.deepseek.com/anthropic"
 DEFAULT_PROXY_HOST = "127.0.0.1"
 DEFAULT_PROXY_PORT = 17631
 DEFAULT_AUTH_SCHEME = "bearer"
-DEFAULT_CLAUDE_ROUTE_MODELS = ["claude-sonnet-4-5", "anthropic/claude-sonnet-4-5"]
+DEFAULT_CLAUDE_ROUTE_MODELS = ["claude-sonnet-5", "claude-opus-5"]
 DEFAULT_DEEPSEEK_MODEL = "deepseek-v4-pro"
 DEFAULT_DISPLAY_MODEL_MAP = [
     ("Claude Mythos Flash", "deepseek-v4-flash"),
@@ -728,7 +728,7 @@ def main() -> int:
     parser.add_argument(
         "--direct",
         action="store_true",
-        help="Point Claude Desktop directly at DeepSeek instead of the local compatibility proxy.",
+        help="Point Claude Desktop straight at the gateway instead of the local compatibility proxy.",
     )
     parser.add_argument("--proxy-host", default=DEFAULT_PROXY_HOST, help="Local proxy host")
     parser.add_argument("--proxy-port", type=int, default=DEFAULT_PROXY_PORT, help="Local proxy port")
@@ -781,26 +781,24 @@ def main() -> int:
         print("Claude Desktop restored to normal 1P mode.")
     else:
         gateway_base_url = args.base_url.rstrip("/")
-        if not args.direct:
-            if args.model_maps:
-                models, route_model_map = parse_model_maps(args.model_maps)
+        if args.model_maps:
+            models, route_model_map = parse_model_maps(args.model_maps)
+        else:
+            models = parse_models(args.models)
+            if args.models:
+                route_model_map = {
+                    canonical_route_model(model["name"] if isinstance(model, dict) else model): DEFAULT_DEEPSEEK_MODEL
+                    for model in models
+                    if is_claude_route_model(model["name"] if isinstance(model, dict) else model)
+                } or dict(DEFAULT_ROUTE_MODEL_MAP)
             else:
-                models = parse_models(args.models)
-                if args.models:
-                    route_model_map = {
-                        canonical_route_model(model["name"] if isinstance(model, dict) else model): DEFAULT_DEEPSEEK_MODEL
-                        for model in models
-                        if is_claude_route_model(model["name"] if isinstance(model, dict) else model)
-                    } or dict(DEFAULT_ROUTE_MODEL_MAP)
-                else:
-                    route_model_map = dict(DEFAULT_ROUTE_MODEL_MAP)
+                route_model_map = dict(DEFAULT_ROUTE_MODEL_MAP)
+        if not args.direct:
             if not args.dry_run:
                 write_route_model_map(route_model_map, args.dry_run)
             if not args.dry_run:
                 start_proxy(args.proxy_host, args.proxy_port, restart=True)
             gateway_base_url = f"http://{args.proxy_host}:{args.proxy_port}"
-        else:
-            models = parse_models(args.models)
         set_deployment_mode(normal_root / "claude_desktop_config.json", "3p", args.dry_run)
         set_deployment_mode(third_party_root / "claude_desktop_config.json", "3p", args.dry_run)
         managed_mcp_servers = apply_cowork_auto_mode_config(

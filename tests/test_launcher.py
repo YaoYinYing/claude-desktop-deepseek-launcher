@@ -86,15 +86,15 @@ class LauncherHelpersTest(unittest.TestCase):
         self.assertEqual(
             models,
             [
-                {"name": "claude-sonnet-4-5", "labelOverride": "Claude Mythos Flash"},
-                {"name": "anthropic/claude-sonnet-4-5", "labelOverride": "Claude Mythos"},
+                {"name": "claude-sonnet-5", "labelOverride": "Claude Mythos Flash"},
+                {"name": "claude-opus-5", "labelOverride": "Claude Mythos"},
             ],
         )
         self.assertEqual(
             route_map,
             {
-                "claude-sonnet-4-5": "deepseek-v4-flash",
-                "anthropic/claude-sonnet-4-5": "deepseek-v4-pro",
+                "claude-sonnet-5": "deepseek-v4-flash",
+                "claude-opus-5": "deepseek-v4-pro",
             },
         )
         self.assertEqual(

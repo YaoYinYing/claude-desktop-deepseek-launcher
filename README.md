@@ -187,6 +187,24 @@ The default local proxy fixes those compatibility issues by:
 - sanitizing `user_id` and `userid` values to DeepSeek's allowed pattern
 - advertising valid Anthropic route names to Claude Desktop while rewriting those routes to DeepSeek upstream model names
 
+## Self-Hosted Gateway And Auto Mode
+
+If you point Claude Desktop at your own Anthropic-compatible gateway (a relay in
+front of DeepSeek or another provider), the model **route names** you put in
+`inferenceModels` matter twice over:
+
+1. Claude Desktop rejects non-Anthropic names outright. `deepseek-flash` fails with
+   `"deepseek-flash" is not an Anthropic model for this provider`; `claude-sonnet-5`
+   passes. This is why `--model-map DISPLAY=UPSTREAM` stores a hidden Claude route and
+   puts your label in `labelOverride`.
+2. The same route string also gates **Auto mode** ("Automatically approve"). The app
+   greys the option out for routes that look older than Claude 4.6, so
+   `claude-sonnet-4-5` and `claude-opus-4-6` are accepted but cannot use Auto mode,
+   while `claude-sonnet-5` / `claude-opus-5` can. The launcher defaults to the latter.
+
+See [docs/self-hosted-gateway.md](docs/self-hosted-gateway.md) for the exact client
+rules, a gateway checklist, and how `--direct` behaves against a relay.
+
 ## Troubleshooting
 
 If Claude Desktop says `configured model "deepseek-v4-pro" is not an Anthropic model`, rerun the latest launcher. New Claude Desktop versions require `inferenceModels` to use Anthropic route names such as `claude-sonnet-4-5`; the proxy rewrites that route to DeepSeek upstream.
